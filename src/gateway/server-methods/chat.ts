@@ -334,6 +334,7 @@ export const chatHandlers: GatewayRequestHandlers = {
       );
       return;
     }
+
     const p = params as {
       sessionKey: string;
       message: string;
@@ -367,6 +368,7 @@ export const chatHandlers: GatewayRequestHandlers = {
                 : undefined,
         }))
         .filter((a) => a.content) ?? [];
+
     const rawMessage = p.message.trim();
     if (!rawMessage && normalizedAttachments.length === 0) {
       respond(
@@ -524,6 +526,7 @@ export const chatHandlers: GatewayRequestHandlers = {
       });
 
       let agentRunStarted = false;
+
       void dispatchInboundMessage({
         ctx,
         cfg,

@@ -7,6 +7,7 @@ import {
   browserNavigate,
   browserPdfSave,
   browserScreenshotAction,
+  type BrowserActErrorResponse,
 } from "../../browser/client-actions.js";
 import {
   browserCloseTab,
@@ -28,6 +29,16 @@ import { BrowserToolSchema } from "./browser-tool.schema.js";
 import { type AnyAgentTool, imageResultFromFile, jsonResult, readStringParam } from "./common.js";
 import { callGatewayTool } from "./gateway.js";
 import { listNodes, resolveNodeIdFromList, type NodeListNode } from "./nodes-utils.js";
+
+function isBrowserActErrorResponse(value: unknown): value is BrowserActErrorResponse {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "ok" in value &&
+    (value as { ok?: unknown }).ok === false &&
+    "message" in value
+  );
+}
 
 function wrapBrowserExternalJson(params: {
   kind: "snapshot" | "console" | "tabs";
@@ -808,6 +819,20 @@ export function createBrowserTool(opts?: {
               : await browserAct(baseUrl, request as Parameters<typeof browserAct>[1], {
                   profile,
                 });
+
+            // P0 Fix: 检查返回结果中的错误状态 - 使用类型守卫替代类型断言
+            if (isBrowserActErrorResponse(result)) {
+              return {
+                content: [
+                  {
+                    type: "text",
+                    text: `Action failed: ${result.message || "Unknown error"}. ${result.suggestion || ""}`,
+                  },
+                ],
+                details: result,
+              };
+            }
+
             return jsonResult(result);
           } catch (err) {
             const msg = String(err);

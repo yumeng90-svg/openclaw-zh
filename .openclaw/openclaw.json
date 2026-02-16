@@ -1,0 +1,25 @@
+{
+  "agents": {
+    "defaults": {
+      "workspace": "/Users/xiangheihei/.openclaw/workspace"
+    }
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto"
+  },
+  "meta": {
+    "lastTouchedVersion": "2026.2.13",
+    "lastTouchedAt": "2026-02-15T02:33:03.927Z"
+  },
+  "gateway": {
+    "mode": "local",
+    "controlUi": {
+      "root": "/Users/xiangheihei/Documents/trae_projects/openclaw/openclaw/ui-zh"
+    },
+    "auth": {
+      "mode": "token",
+      "token": "ef322237587947ef98eb85fe23e5ab37"
+    }
+  }
+}

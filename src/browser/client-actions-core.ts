@@ -86,12 +86,16 @@ export type BrowserActRequest =
   | { kind: "evaluate"; fn: string; ref?: string; targetId?: string; timeoutMs?: number }
   | { kind: "close"; targetId?: string };
 
-export type BrowserActResponse = {
-  ok: true;
-  targetId: string;
-  url?: string;
-  result?: unknown;
-};
+export type BrowserActResponse =
+  | { ok: true; targetId: string; url?: string; result?: unknown; error?: never }
+  | BrowserActErrorResponse;
+
+export interface BrowserActErrorResponse {
+  ok: false;
+  error: string;
+  message: string;
+  suggestion?: string;
+}
 
 export type BrowserDownloadPayload = {
   url: string;

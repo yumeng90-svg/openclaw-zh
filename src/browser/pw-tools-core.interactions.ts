@@ -42,23 +42,112 @@ export async function clickViaPlaywright(opts: {
   const ref = requireRef(opts.ref);
   const locator = refLocator(page, ref);
   const timeout = Math.max(500, Math.min(60_000, Math.floor(opts.timeoutMs ?? 8000)));
-  try {
-    if (opts.doubleClick) {
-      await locator.dblclick({
-        timeout,
-        button: opts.button,
-        modifiers: opts.modifiers,
-      });
-    } else {
-      await locator.click({
-        timeout,
-        button: opts.button,
-        modifiers: opts.modifiers,
-      });
+
+  // P3 Fix: Try multiple click methods as fallback with proper error categorization
+  const clickMethods: Array<{ name: string; fn: () => Promise<string> }> = [
+    // Method 1: Standard Playwright click
+    {
+      name: "playwright-click",
+      fn: async () => {
+        if (opts.doubleClick) {
+          await locator.dblclick({ timeout, button: opts.button, modifiers: opts.modifiers });
+        } else {
+          await locator.click({ timeout, button: opts.button, modifiers: opts.modifiers });
+        }
+        return "playwright-click";
+      },
+    },
+    // Method 2: Force click (bypass visibility check)
+    {
+      name: "playwright-force-click",
+      fn: async () => {
+        if (opts.doubleClick) {
+          await locator.dblclick({
+            timeout,
+            button: opts.button,
+            modifiers: opts.modifiers,
+            force: true,
+          });
+        } else {
+          await locator.click({
+            timeout,
+            button: opts.button,
+            modifiers: opts.modifiers,
+            force: true,
+          });
+        }
+        return "playwright-force-click";
+      },
+    },
+    // Method 3: JavaScript dispatchEvent
+    {
+      name: "javascript-click",
+      fn: async () => {
+        const el = await locator.elementHandle();
+        if (!el) {
+          const err = new Error(
+            "ELEMENT_HANDLE_NOT_FOUND: No element handle available for JavaScript click",
+          );
+          (err as any).errorCode = "ELEMENT_HANDLE_NOT_FOUND";
+          (err as any).method = "javascript-click";
+          throw err;
+        }
+        await el.evaluate((node: HTMLElement | SVGElement) => {
+          if ("click" in node && typeof node.click === "function") {
+            node.click();
+          } else {
+            node.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+          }
+        });
+        return "javascript-click";
+      },
+    },
+    // Method 4: Mouse coordinates (center of element)
+    {
+      name: "mouse-coordinate-click",
+      fn: async () => {
+        const box = await locator.boundingBox();
+        if (!box) {
+          const err = new Error(
+            "BOUNDING_BOX_NOT_FOUND: Cannot get element bounding box for coordinate click",
+          );
+          (err as any).errorCode = "BOUNDING_BOX_NOT_FOUND";
+          (err as any).method = "mouse-coordinate-click";
+          throw err;
+        }
+        await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+        return "mouse-coordinate-click";
+      },
+    },
+  ];
+
+  let lastError: Error | null = null;
+  let failedMethod: string | null = null;
+  for (const { name, fn } of clickMethods) {
+    try {
+      const methodName = await fn();
+      console.log(`[clickViaPlaywright] Success via ${methodName}`);
+      return;
+    } catch (err) {
+      lastError = err as Error;
+      failedMethod = name;
+      console.log(`[clickViaPlaywright] Method ${name} failed: ${lastError.message}`);
     }
-  } catch (err) {
-    throw toAIFriendlyError(err, ref);
   }
+
+  // All methods failed - provide detailed error with method breakdown
+  const errorDetail = lastError
+    ? `[${failedMethod}] ${lastError.message}`
+    : "All click methods failed";
+  const finalError = new Error(
+    `Click failed for "${ref}". Tried ${clickMethods.length} methods: ` +
+      clickMethods.map((m) => m.name).join(", ") +
+      `. Last error: ${errorDetail}`,
+  );
+  (finalError as any).errorCode = "CLICK_ALL_METHODS_FAILED";
+  (finalError as any).failedMethod = failedMethod;
+  (finalError as any).attemptedMethods = clickMethods.map((m) => m.name);
+  throw toAIFriendlyError(finalError, ref);
 }
 
 export async function hoverViaPlaywright(opts: {

@@ -81,8 +81,28 @@ export function registerBrowserAgentActRoutes(
           if (timeoutMs) {
             clickRequest.timeoutMs = timeoutMs;
           }
-          await pw.clickViaPlaywright(clickRequest);
-          return res.json({ ok: true, targetId: tab.targetId, url: tab.url });
+
+          try {
+            await pw.clickViaPlaywright(clickRequest);
+            return res.json({ ok: true, targetId: tab.targetId, url: tab.url });
+          } catch (err) {
+            const errorMsg = String(err);
+            // P0 Fix: 返回失败状态而不是成功
+            if (
+              errorMsg.includes("not found") ||
+              errorMsg.includes("not visible") ||
+              errorMsg.includes("Timeout")
+            ) {
+              return res.json({
+                ok: false,
+                error: "ELEMENT_NOT_FOUND",
+                message: errorMsg,
+                suggestion: "Run snapshot again to get fresh ref IDs",
+              });
+            }
+            // 其他错误继续抛出
+            throw err;
+          }
         }
         case "type": {
           const ref = toStringOrEmpty(body.ref);

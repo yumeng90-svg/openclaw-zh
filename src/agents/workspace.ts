@@ -29,6 +29,7 @@ export const DEFAULT_HEARTBEAT_FILENAME = "HEARTBEAT.md";
 export const DEFAULT_BOOTSTRAP_FILENAME = "BOOTSTRAP.md";
 export const DEFAULT_MEMORY_FILENAME = "MEMORY.md";
 export const DEFAULT_MEMORY_ALT_FILENAME = "memory.md";
+export const DEFAULT_RULES_FILENAME = "RULES.md";
 
 const workspaceTemplateCache = new Map<string, Promise<string>>();
 let gitAvailabilityPromise: Promise<boolean> | null = null;
@@ -84,7 +85,8 @@ export type WorkspaceBootstrapFileName =
   | typeof DEFAULT_HEARTBEAT_FILENAME
   | typeof DEFAULT_BOOTSTRAP_FILENAME
   | typeof DEFAULT_MEMORY_FILENAME
-  | typeof DEFAULT_MEMORY_ALT_FILENAME;
+  | typeof DEFAULT_MEMORY_ALT_FILENAME
+  | typeof DEFAULT_RULES_FILENAME;
 
 export type WorkspaceBootstrapFile = {
   name: WorkspaceBootstrapFileName;
@@ -104,6 +106,7 @@ const VALID_BOOTSTRAP_NAMES: ReadonlySet<string> = new Set([
   DEFAULT_BOOTSTRAP_FILENAME,
   DEFAULT_MEMORY_FILENAME,
   DEFAULT_MEMORY_ALT_FILENAME,
+  DEFAULT_RULES_FILENAME,
 ]);
 
 async function writeFileIfMissing(filePath: string, content: string) {
@@ -307,6 +310,10 @@ export async function loadWorkspaceBootstrapFiles(dir: string): Promise<Workspac
     {
       name: DEFAULT_BOOTSTRAP_FILENAME,
       filePath: path.join(resolvedDir, DEFAULT_BOOTSTRAP_FILENAME),
+    },
+    {
+      name: DEFAULT_RULES_FILENAME,
+      filePath: path.join(resolvedDir, DEFAULT_RULES_FILENAME),
     },
   ];
 

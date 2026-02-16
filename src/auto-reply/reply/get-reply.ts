@@ -285,6 +285,37 @@ export async function getReplyFromConfig(
   directives = inlineActionResult.directives;
   abortedLastRun = inlineActionResult.abortedLastRun ?? abortedLastRun;
 
+  if (opts?.images && opts.images.length > 0 && !ctx.MediaPath && !ctx.MediaPaths) {
+    const { ensureMediaDir } = await import("../../media/store.js");
+    const path = await import("node:path");
+    const fs = await import("node:fs/promises");
+    const mediaDir = await ensureMediaDir();
+    const inboundDir = path.join(mediaDir, "inbound");
+    await fs.mkdir(inboundDir, { recursive: true });
+
+    const imagePaths: string[] = [];
+    for (let i = 0; i < opts.images.length; i++) {
+      const img = opts.images[i];
+      const ext =
+        img.mimeType === "image/png" ? "png" : img.mimeType === "image/gif" ? "gif" : "jpg";
+      const fileName = `webchat-${Date.now()}-${i}.${ext}`;
+      const filePath = path.join(inboundDir, fileName);
+
+      if (img.data) {
+        const buffer = Buffer.from(img.data, "base64");
+        await fs.writeFile(filePath, buffer);
+        imagePaths.push(filePath);
+      }
+    }
+
+    if (imagePaths.length > 0) {
+      ctx.MediaPath = imagePaths[0];
+      ctx.MediaPaths = imagePaths;
+      sessionCtx.MediaPath = imagePaths[0];
+      sessionCtx.MediaPaths = imagePaths;
+    }
+  }
+
   await stageSandboxMedia({
     ctx,
     sessionCtx,

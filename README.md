@@ -1,5 +1,23 @@
 # 🦞 OpenClaw — 个人 AI 助手
 
+<!-- 版本更新记录 -->
+
+## 📋 版本更新记录
+
+### 2026.2.17 (2026-02-17)
+
+**修复**: 修复 pi-coding-agent 压缩会话时 parentId 错误问题
+
+- **问题描述**: 当上下文压缩时，compaction 记录的 parentId 被错误设置为最后一个被删除的消息，导致会话链断裂，后续消息无法正常链接，表现为 Agent 不回复消息 (replies=0)
+- **根因**: pi-coding-agent 库的 `appendCompaction` 方法使用了 `this.leafId`（最后一个被删除的消息 ID），而不是 `firstKeptEntryId`（第一个被保留的消息 ID）
+- **修复方案**:
+  - 修改 pi-coding-agent 库的 `session-manager.js` 第 615 行
+  - 将 `parentId: this.leafId` 改为 `parentId: firstKeptEntryId`
+  - 使用 patch-package 自动应用补丁，确保重新安装依赖后修复不会丢失
+- **影响**: 以后触发上下文压缩时，会正确保持消息链连续性
+
+---
+
 <p align="center">
     <picture>
         <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/openclaw/openclaw/main/docs/assets/openclaw-logo-text-dark.png">

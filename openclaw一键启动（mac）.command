@@ -66,7 +66,7 @@ cd "$OPENCLAW_DIR"
 # 启动 Gateway (后台运行)
 echo "🔌 启动 Gateway (端口 18789)..."
 cd "$OPENCLAW_DIR"
-$NODE dist/index.js gateway --port 18789 --token ef322237587947ef98eb85fe23e5ab37 &
+$NODE dist/index.js gateway --port 18789 --bind lan --token ef322237587947ef98eb85fe23e5ab37 &
 GATEWAY_PID=$!
 echo "✅ Gateway 已启动 (PID: $GATEWAY_PID)"
 

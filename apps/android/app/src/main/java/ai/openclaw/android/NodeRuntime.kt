@@ -541,11 +541,12 @@ class NodeRuntime(context: Context) {
   fun connectManual() {
     val host = manualHost.value.trim()
     val port = manualPort.value
+    val tls = manualTls.value
     if (host.isEmpty() || port <= 0 || port > 65535) {
       _statusText.value = "Failed: invalid manual host/port"
       return
     }
-    connect(GatewayEndpoint.manual(host = host, port = port))
+    connect(GatewayEndpoint.manual(host = host, port = port, tlsEnabled = tls))
   }
 
   fun disconnect() {

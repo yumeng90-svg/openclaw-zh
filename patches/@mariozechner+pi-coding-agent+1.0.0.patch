@@ -1,0 +1,11 @@
+diff --git a/node_modules/@mariozechner/pi-coding-agent/dist/core/session-manager.js b/node_modules/@mariozechner/pi-coding-agent/dist/core/session-manager.js
+--- a/node_modules/@mariozechner/pi-coding-agent/dist/core/session-manager.js
++++ b/node_modules/@mariozechner/pi-coding-agent/dist/core/session-manager.js
+@@ -613,7 +613,7 @@ export class SessionManager {
+             type: "compaction",
+             id: generateId(this.byId),
+-            parentId: this.leafId,
++            parentId: firstKeptEntryId,
+             timestamp: new Date().toISOString(),
+             summary,
+             firstKeptEntryId,
